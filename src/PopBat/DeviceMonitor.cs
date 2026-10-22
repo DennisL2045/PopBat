@@ -11,6 +11,7 @@ internal sealed class DeviceMonitor
     private readonly DeltaHidReader _delta = new();
     private readonly LogitechHidReader _logitech = new();
     private readonly BluetoothGattReader _bluetooth = new();
+    private readonly BluetoothClassicReader _classic = new();
     private readonly StandardHidReader _standardHid = new();
     private readonly LegacyKeyboardReader _keyboard = new();
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -18,10 +19,15 @@ internal sealed class DeviceMonitor
     internal DeviceMonitor()
     {
         _providers = new[] {
-            new BatteryProvider("bluetooth-battery-service", BatteryProviderKind.Standard, 0, async (context, token) => {
-                var readings = await _bluetooth.ReadAsync(token, context.ReportProgress); context.DeferVendorReads |= _bluetooth.IsPending; return readings;
+            new BatteryProvider("bluetooth-fast-pair", BatteryProviderKind.Standard, 0, async (context, token) => {
+                if (_bluetooth.IsPending) { context.DeferVendorReads = true; return Array.Empty<DeviceBattery>(); }
+                var readings = await _classic.ReadAsync(token, context.ReportProgress); context.DeferVendorReads |= _classic.IsPending; return readings;
             }),
-            new BatteryProvider("hid-battery-feature", BatteryProviderKind.Standard, 1, async (context, token) => {
+            new BatteryProvider("bluetooth-battery-service", BatteryProviderKind.Standard, 1, async (context, token) => {
+                if (_classic.IsPending) return Array.Empty<DeviceBattery>();
+                var readings = await _bluetooth.ReadAsync(token, context.ReportProgress, context.CoveredPhysicalKeys); context.DeferVendorReads |= _bluetooth.IsPending; return readings;
+            }),
+            new BatteryProvider("hid-battery-feature", BatteryProviderKind.Standard, 2, async (context, token) => {
                 var batch = await _standardHid.ReadAsync(context.CoveredPhysicalKeys, token);
                 context.HidInventory = batch.Inventory; context.DeferVendorReads |= _standardHid.IsPending || _keyboard.IsPending; return batch.Devices;
             }),
@@ -45,7 +51,7 @@ internal sealed class DeviceMonitor
         try
         {
             return await Task.Run(async () => {
-                if (retry) { _logitech.RetryNow(); _bluetooth.RetryNow(); _standardHid.RetryNow(); _keyboard.RetryNow(); }
+                if (retry) { _logitech.RetryNow(); _classic.RetryNow(); _bluetooth.RetryNow(); _standardHid.RetryNow(); _keyboard.RetryNow(); }
                 return await BatteryProviderPipeline.ReadAsync(_providers, token, progress);
             }, token);
         }

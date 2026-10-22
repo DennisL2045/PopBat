@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace PopBat;
 
-public sealed record DeviceBattery(string Key, string Name, string Connection, BatteryReading Reading, string? Level = null, string? PhysicalKey = null, string? Note = null);
+public sealed record DeviceBattery(string Key, string Name, string Connection, BatteryReading Reading, string? Level = null, string? PhysicalKey = null, string? Note = null, bool AllowEstimate = true);
 
 internal interface ILogitechChannel
 {

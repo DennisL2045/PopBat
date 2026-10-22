@@ -204,7 +204,7 @@ public partial class MainWindow : Window
     }
     private DeviceCard ToCard(DeviceBattery device)
     {
-        var r = device.Reading; var estimate = HistoryFor(device.Key).Estimate(r);
+        var r = device.Reading; var estimate = device.AllowEstimate ? HistoryFor(device.Key).Estimate(r) : null;
         string state = r.State switch { DeviceState.Connected => "已連線", DeviceState.ReceiverMissing => "未找到接收器", DeviceState.HeadsetOffline => "耳機離線", DeviceState.NotReady => "尚未就緒", DeviceState.NoReply => "未取得回覆", DeviceState.UnsupportedInterface => "尚未支援", DeviceState.AccessDenied => "存取受限", DeviceState.UnverifiedReading => "電量未核實", _ => "讀取失敗" };
         string detail = r.State switch
         {
@@ -223,7 +223,7 @@ public partial class MainWindow : Window
         return new(device.Name, device.Connection, state, r.State == DeviceState.Connected ? r.Percent is int percent ? percent + "%" : device.Level ?? "未知" : "—", r.Percent ?? 0,
             r.Percent <= 20 ? Brushes.SandyBrown : GoodBatteryBrush, detail,
             r.State != DeviceState.Connected ? "未知" : r.Charging switch { true => "充電中", false => "未充電", _ => "未知" },
-            r.State != DeviceState.Connected ? "—" : r.Percent == null ? "無精確電量可估算" : r.Charging == true ? "充電中" : r.Charging == null ? "充電狀態未知" : estimate == null ? "累積資料中" : $"約 {estimate.LowHours:0.#}–{estimate.HighHours:0.#} 小時",
+            r.State != DeviceState.Connected ? "—" : !device.AllowEstimate ? "暫不提供" : r.Percent == null ? "無精確電量可估算" : r.Charging == true ? "充電中" : r.Charging == null ? "充電狀態未知" : estimate == null ? "累積資料中" : $"約 {estimate.LowHours:0.#}–{estimate.HighHours:0.#} 小時",
             r.State == DeviceState.Connected ? r.CheckedAt.ToLocalTime().ToString("MM/dd HH:mm:ss")
                 : _lastGood.TryGetValue(device.Key, out var last) ? last.CheckedAt.ToLocalTime().ToString("MM/dd HH:mm:ss") : "—");
     }

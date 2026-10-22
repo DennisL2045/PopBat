@@ -1,5 +1,5 @@
-[CmdletBinding()]
-param([switch]$ResourceCheck, [switch]$Preview, [switch]$HidCapabilities, [switch]$BatteryDetails, [switch]$HidCollections, [switch]$KeyboardProbe)
+﻿[CmdletBinding()]
+param([switch]$ResourceCheck, [switch]$Preview, [switch]$HidCapabilities, [switch]$BatteryDetails, [switch]$HidCollections, [switch]$KeyboardProbe, [switch]$HeadsetDetails)
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 Set-Location -LiteralPath $projectRoot
@@ -15,7 +15,7 @@ $stamp = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss-fff')
 $results = Join-Path $PSScriptRoot 'results'
 New-Item -ItemType Directory -Force -Path $results | Out-Null
 $report = Join-Path $results ($(if ($ResourceCheck) { 'resource-' } elseif ($BatteryDetails) { 'battery-details-' } elseif ($HidCapabilities) { 'hid-capabilities-' } else { 'devices-' }) + $stamp + '.json')
-$start.Arguments = $(if ($ResourceCheck) { '--resource-check' } elseif ($KeyboardProbe) { '--probe-keyboard' } elseif ($HidCollections) { '--inspect-hid-collections' } elseif ($BatteryDetails) { '--inspect-battery' } elseif ($HidCapabilities) { '--inspect-hid' } elseif ($Preview) { '--preview --output "' + (Join-Path $projectRoot 'app/preview.png') + '"' } else { '--probe-all' })
+$start.Arguments = $(if ($ResourceCheck) { '--resource-check' } elseif ($HeadsetDetails) { '--inspect-headset' } elseif ($KeyboardProbe) { '--probe-keyboard' } elseif ($HidCollections) { '--inspect-hid-collections' } elseif ($BatteryDetails) { '--inspect-battery' } elseif ($HidCapabilities) { '--inspect-hid' } elseif ($Preview) { '--preview --output "' + (Join-Path $projectRoot 'app/preview.png') + '"' } else { '--probe-all' })
 $process = New-Object System.Diagnostics.Process
 $process.StartInfo = $start
 try {
@@ -28,7 +28,7 @@ try {
     $null = $stderr.GetAwaiter().GetResult()
     if ($process.ExitCode -notin @(0,1)) { throw ('PopBat diagnostic failed, exit code ' + $process.ExitCode) }
     $data = $text | ConvertFrom-Json
-    if ($data.Version -ne '0.4.5') { throw 'Unexpected diagnostic format.' }
+    if ($data.Version -ne '0.4.6') { throw 'Unexpected diagnostic format.' }
     $data | Add-Member -NotePropertyName ExecutableSha256 -NotePropertyValue (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash
     # The executable emits only parsed names/status/battery or its own resource counters.
     $data | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $report -Encoding UTF8

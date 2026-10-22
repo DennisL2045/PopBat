@@ -61,6 +61,7 @@ internal static class SelfTests
             Check(System.Runtime.InteropServices.Marshal.SizeOf<Native.Caps>() == 64, "Windows HID caps struct layout");
             count += LogitechTests.Run();
             count += StandardBatteryTests.Run();
+            count += FastPairTests.Run();
             count += LegacyKeyboardTests.Run();
             Console.WriteLine($"PASS: {count} checks; no hardware was opened and no test history was written.");
             return 0;

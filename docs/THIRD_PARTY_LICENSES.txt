@@ -1,3 +1,13 @@
+Protocol documentation attribution (no additional runtime dependency)
+PopBat's original Fast Pair status implementation follows Google's published
+Message Stream, Device information and Battery Notification specifications:
+https://developers.google.com/nearby/fast-pair/specifications/extensions/messagestream
+https://developers.google.com/nearby/fast-pair/specifications/extensions/deviceinformation
+https://developers.google.com/nearby/fast-pair/specifications/extensions/batterynotification
+Documentation copyright Google; text licensed under CC BY 4.0:
+https://creativecommons.org/licenses/by/4.0/
+PopBat's explanations are adapted summaries. No Google SDK or sample code is included.
+
 .NET 8 Windows runtime and Windows Desktop runtime
 The Windows distribution contains components with different licenses.
 Applicable Microsoft .NET Library License terms are reproduced in this bundle.

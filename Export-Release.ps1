@@ -86,7 +86,9 @@ try {
     if (!$process.WaitForExit(30000)) { $process.Kill(); throw 'Share package self-test timed out.' }
     $output = $stdout.GetAwaiter().GetResult().Trim()
     $null = $stderr.GetAwaiter().GetResult()
-    if ($process.ExitCode -ne 0 -or $output -ne 'PASS: 167 checks; no hardware was opened and no test history was written.') { throw 'Share package self-test failed.' }
+    $selfTest = [regex]::Match($output, '^PASS: (\d+) checks; no hardware was opened and no test history was written\.$')
+    if ($process.ExitCode -ne 0 -or !$selfTest.Success -or [int]$selfTest.Groups[1].Value -lt 167) { throw 'Share package self-test failed.' }
+    $selfTestChecks = [int]$selfTest.Groups[1].Value
 } finally { $process.Dispose() }
 if (Test-Path -LiteralPath (Join-Path $verify 'data')) { throw 'Share self-test unexpectedly created user data.' }
 $report = [ordered]@{
@@ -95,7 +97,7 @@ $report = [ordered]@{
     ExecutableSha256 = (Get-FileHash -LiteralPath (Join-Path $verify 'PopBat.exe') -Algorithm SHA256).Hash
     Bytes = (Get-Item -LiteralPath $archive).Length; Files = $names
     SelfContained = $true; IncludedFrameworks = $config.runtimeOptions.includedFrameworks
-    ChecksumsVerified = $true; SelfTestChecks = 167; UserDataIncluded = $false
+    ChecksumsVerified = $true; SelfTestChecks = $selfTestChecks; UserDataIncluded = $false
 }
 [IO.File]::WriteAllText((Join-Path $buildRoot 'release-report.json'), ($report | ConvertTo-Json -Depth 6), [Text.UTF8Encoding]::new($false))
 $report | ConvertTo-Json -Depth 6

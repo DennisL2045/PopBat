@@ -29,7 +29,7 @@ internal sealed class BluetoothGattReader
         new DeviceBattery("bluetooth-status", "藍牙裝置", "藍牙 · 裝置直接讀取", BatteryReading.Empty(state), detail) };
 
     internal async Task<IReadOnlyList<DeviceBattery>> ReadAsync(CancellationToken token,
-        Action<IReadOnlyList<DeviceBattery>>? progress = null)
+        Action<IReadOnlyList<DeviceBattery>>? progress = null, IReadOnlySet<string>? covered = null)
     {
         token.ThrowIfCancellationRequested();
         // A Windows GATT request can outlive cancellation. Retain ONE operation until completion;
@@ -39,14 +39,14 @@ internal sealed class BluetoothGattReader
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
         deadline.CancelAfter(TimeSpan.FromSeconds(8));
         _progress = Array.Empty<DeviceBattery>();
-        _pending = ReadCoreAsync(deadline.Token, progress);
+        _pending = ReadCoreAsync(deadline.Token, progress, covered?.ToHashSet(StringComparer.OrdinalIgnoreCase));
         try { return await _pending.WaitAsync(deadline.Token); }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)
         { return _progress.Concat(Status(DeviceState.NoReply, "部分藍牙直接通訊逾時；保留本輪已完成讀數，不採用舊電量。")).ToArray(); }
     }
 
     private async Task<IReadOnlyList<DeviceBattery>> ReadCoreAsync(CancellationToken token,
-        Action<IReadOnlyList<DeviceBattery>>? progress)
+        Action<IReadOnlyList<DeviceBattery>>? progress, IReadOnlySet<string>? covered)
     {
         try
         {
@@ -54,7 +54,9 @@ internal sealed class BluetoothGattReader
             var devices = await CompleteAsync(DeviceInformation.FindAllAsync(
                 BluetoothLEDevice.GetDeviceSelectorFromConnectionStatus(BluetoothConnectionStatus.Connected),
                 new[] { "System.Devices.Aep.ContainerId" }, DeviceInformationKind.AssociationEndpoint), token);
-            var candidates = devices.Take(256).Where(d => d.Pairing.IsPaired).Take(32).ToArray();
+            var candidates = devices.Take(256).Where(d => d.Pairing.IsPaired &&
+                !(d.Properties.TryGetValue("System.Devices.Aep.ContainerId", out var container) && container is Guid id
+                    && covered?.Contains(id.ToString()) == true)).Take(32).ToArray();
             var keys = candidates.Select(d => d.Id).ToHashSet();
             foreach (string stale in _entries.Keys.Where(k => !keys.Contains(k)).ToArray()) _entries.Remove(stale);
             var output = new List<DeviceBattery>();

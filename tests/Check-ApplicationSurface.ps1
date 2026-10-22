@@ -7,6 +7,13 @@ $imports = 0
 foreach ($file in $source) {
     $text = Get-Content -LiteralPath $file.FullName -Raw
     if ([regex]::IsMatch($text,$disallowed) -or [regex]::IsMatch($text,'\b(HidD_GetInputReport|HidD_SetFeature|HidD_SetOutputReport)\s*\(')) { throw ('Disallowed application capability found in ' + $file.Name) }
+    if ($text -match '\bStreamSocket\b') {
+        if ($file.Name -ne 'BluetoothClassicReader.cs' -or $text -notmatch 'HostNameType\.Bluetooth' -or
+            $text -notmatch 's\.ServiceId\.Uuid == FastPairProtocol\.ServiceUuid' -or
+            $text -notmatch 'SocketProtectionLevel\.BluetoothEncryptionWithAuthentication') {
+            throw 'StreamSocket is allowed only in the authenticated, service-pinned Bluetooth reader.'
+        }
+    }
     foreach ($match in [regex]::Matches($text,'DllImport\("([^"]+)"')) {
         if ($match.Groups[1].Value -notin $allowedDlls) { throw 'Unexpected native library.' }
         $imports++
