@@ -1,4 +1,4 @@
-# PopBat 使用說明
+﻿# PopBat 使用說明
 
 Copyright © 2026 DennisL2045
 
@@ -22,3 +22,11 @@ PopBat 原始程式碼採 MIT 授權，條款見 LICENSE.txt。內含的第三�
 PopBat 本身沒有雲端 API、登入、遙測或回連伺服器功能。Windows／.NET 自身的系統錯誤回報依系統設定運作，不是 PopBat 維運的服務。
 
 目前沒有程式碼簽章或遊戲防外掛認證；不需要關閉安全軟體或遊戲防護來使用。未支援的裝置請回報品牌、型號、連線方式與顯示狀態，避免提供序號、藍牙位址或原始封包。
+
+## 0.4.8 跨電腦診斷
+
+此版本保留通用裝置支援，將藍牙與 USB 查詢分開，避免較慢的通訊一起拖住結果。取消／逾時後仍保留本輪已取得的新電量。
+
+若另一台電腦能開程式但讀不到電量，先完全退出 PopBat，再雙擊同資料夾的 Run-Diagnostics.cmd。將 diagnostics/compatibility-*.json 帶回即可；不需序號、藍牙位址、封包或個人檔案。報告不自動上傳。僅檢查環境可執行 Diagnose-Compatibility.ps1 -EnvironmentOnly。
+
+本版只讀目前支援的電池能力／協定；沒有標準電池 Feature 不等於接收器未插入。SDK 不需安裝在使用者電腦，分享 ZIP 已包含 runtime。詳細判讀見原始碼中的 docs/COMPATIBILITY.md。

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -100,8 +100,10 @@ public partial class MainWindow : Window
         RenderCards(_current, new HashSet<string>());
         using var query = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
         query.CancelAfter(TimeSpan.FromSeconds(20)); _currentQuery = query;
+        IReadOnlyList<DeviceBattery> partialReadings = Array.Empty<DeviceBattery>();
         void Report(IReadOnlyList<DeviceBattery> batch)
         {
+            Volatile.Write(ref partialReadings, batch.ToArray());
             if (Dispatcher.HasShutdownStarted) return;
             Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => {
                 if (!ReferenceEquals(_currentQuery, query) || query.IsCancellationRequested || _exiting) return;
@@ -140,7 +142,12 @@ public partial class MainWindow : Window
             {
                 foreach (var history in _otherHistory.Values) history.Add(BatteryReading.Empty(DeviceState.NoReply));
                 _history.Add(BatteryReading.Empty(DeviceState.NoReply));
-                ApplyReadings(_current.Select(d => d with { Reading = BatteryReading.Empty(DeviceState.NoReply), Level = null }).ToArray());
+                var partial = Volatile.Read(ref partialReadings);
+                foreach (var device in partial) {
+                    HistoryFor(device.Key).Add(device.Reading);
+                    if (device.Reading.State == DeviceState.Connected) _lastGood[device.Key] = device.Reading;
+                }
+                ApplyReadings(InterruptedRound(_current, partial));
             }
         }
         finally
@@ -151,6 +158,12 @@ public partial class MainWindow : Window
             if (!_exiting) CheckText.Text = query.IsCancellationRequested
                 ? "更新已停止 · 可再手動更新" : $"讀取 {DateTime.Now:HH:mm:ss} · 僅手動更新";
         }
+    }
+    internal static IReadOnlyList<DeviceBattery> InterruptedRound(IReadOnlyList<DeviceBattery> previous, IReadOnlyList<DeviceBattery> partial)
+    {
+        var keys = partial.Select(d => d.Key).ToHashSet();
+        return partial.Concat(previous.Where(d => !keys.Contains(d.Key))
+            .Select(d => d with { Reading = BatteryReading.Empty(DeviceState.NoReply), Level = null })).Take(64).ToArray();
     }
     private BatteryHistory HistoryFor(string key)
     {

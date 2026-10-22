@@ -1,4 +1,4 @@
-﻿# PopBat 0.4.6 測試清單
+﻿# PopBat 0.4.8 測試清單
 
 2026-10-22。通用電量優先、品牌協定補充。測試與實機證據分開記錄，不保存序號、位址、容器 ID、原生路徑、按鍵或原始報告。
 
@@ -11,7 +11,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\Run-Tests.ps1
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\Check-ApplicationSurface.ps1
 ```
 
-預期 Self-test: True; checks: 207、Device probe: NotRequested。既有 158 項保留，新增 9 項涵蓋跳過不準 Read、部分結果及晚到回報、最終結果完整、保留卡片與減少綁定通知，以及臨時通用／專用接收器的中間顯示。測試不開硬體、不寫歷史；輸出 tests/results/test-*.json 與 exe SHA256。能力檢查通過 22 個標準 Windows native 宣告；禁止程序入侵／鍵鼠鉤子／模擬輸入／網際網路，以及 GATT 寫入、配對、掃描、HID GET_INPUT_REPORT／SET。只允許接收已開啟的標準 BAS 更新，不寫通知設定。這不是外部安全稽核或防外掛認證。
+預期 Self-test: True; checks: 222、Device probe: NotRequested。既有 158 項保留，新增 9 項涵蓋跳過不準 Read、部分結果及晚到回報、最終結果完整、保留卡片與減少綁定通知，以及臨時通用／專用接收器的中間顯示。測試不開硬體、不寫歷史；輸出 tests/results/test-*.json 與 exe SHA256。能力檢查通過 22 個標準 Windows native 宣告；禁止程序入侵／鍵鼠鉤子／模擬輸入／網際網路，以及 GATT 寫入、配對、掃描、HID GET_INPUT_REPORT／SET。只允許接收已開啟的標準 BAS 更新，不寫通知設定。這不是外部安全稽核或防外掛認證。
 
 新增測試涵蓋：跨品牌無型號對照、韌體預設名稱／型號字串剔除、直接名稱優先、連線名稱來源註明、標準 battery-only Feature 白名單、報告混合 vendor／鍵盤欄位／按鈕時拒讀、NULL／範圍／比例換算、provider 排序與後備、避免重複讀取、同名不同裝置保留、接收器多槽位不被折疊、未完成通用作業暫緩專用通訊、取消與容量上限。
 
@@ -59,3 +59,11 @@ ROG 原始讀取可用 Run-Tests.ps1 -IncludeDeviceProbe；此開關才進行單
 實機：ATH-CKS30TW+ 左耳由54降至52%、右耳回報50%、盒未知；直接啟用遮罩2確認只有左耳，使用者也確認只有左耳、約50%左右。正式版整合顯示左52%、右未啟用、盒未知；同輪保留 MX15%、M75Pro19%。報告 devices-20261022-071115-196.json。這些電量為當時讀數，不是程式內的校正資料。
 
 使用 Inspect-AllDevices.ps1 -HeadsetDetails 可單獨取得已解析的耳機查詢階段與電量；不記錄位址、序號或原始訊息。僅啟動與手動更新，不常駐監聽。
+
+## 0.4.8 跨機相容性
+
+新增 15 項模擬測試：通用 provider 白名單、控制集合安全條件、pending 通用查詢與已知目標協定隔離、診斷 Deferred、單一例外後其他協定繼續、USB／藍牙並行的早到結果與最終合併、中斷保留新讀數但移除舊百分比、目標接收器替換通用未知卡片。歷史段落的原始測試數量及其他電腦實測資料不視為本機新驗證。
+
+本機新實測：Delta II 52%、G304 90%、鍵盤接收器59%；其他接收器仍可為 NoReply，藍牙本輪沒有成功電量證據。
+
+在新電腦完整解壓分享 ZIP，結束其他 PopBat，再執行 Run-Diagnostics.cmd，帶回 diagnostics/compatibility-*.json。先讀 docs/COMPATIBILITY.md；SDK 不必存在，分享版含 runtime。這份 JSON 的成功產生只證明診斷執行，必須看各裝置 State/Percent 才知道是否讀到電量。

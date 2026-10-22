@@ -8,13 +8,14 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>PopBat</AssemblyName>
-    <Version>0.4.7</Version>
+    <Version>0.4.8</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>Copyright © 2026 DennisL2045</Copyright>
     <Description>Local-only standard Bluetooth and HID battery monitor with vendor fallbacks</Description>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
+  <ItemGroup><AssemblyMetadata Include="SelfContained" Value="$(SelfContained)" /></ItemGroup>
   <!-- Pin only .NET packs; Windows SDK projections have an independent version. -->
   <Target Name="PinBundledRuntimePatch" BeforeTargets="ProcessFrameworkReferences" Condition="'$(SelfContained)' == 'true'">
     <ItemGroup>

@@ -1,4 +1,4 @@
-PopBat original code
+﻿PopBat original code
 Copyright (c) 2026 DennisL2045. Licensed under MIT; see LICENSE / LICENSE.txt.
 The MIT grant covers original PopBat code, including earlier revisions in this
 repository. It does not relicense Microsoft's binaries, third-party components,
@@ -21,7 +21,7 @@ The original runtime package LICENSE and THIRD-PARTY-NOTICES are also retained.
 Authoritative licensing map:
 https://github.com/dotnet/core/blob/main/license-information-windows.md
 
-Windows SDK for .NET targeting pack and projections (10.0.19041.57)
+Windows SDK for .NET targeting pack and projections (resolved build version; see package headers above)
 Copyright (c) Microsoft Corporation. All rights reserved.
 Package license: https://aka.ms/WinSDKLicenseURL
 Package: Microsoft.Windows.SDK.NET.Ref

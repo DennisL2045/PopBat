@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param([switch]$SkipBuild)
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath($PSScriptRoot).TrimEnd('\')
@@ -31,15 +31,29 @@ $archive = Join-Path $artifactRoot ('PopBat-' + $version + '-win-x64-' + $stamp 
 New-Item -ItemType Directory -Force -Path $artifactRoot, $stage | Out-Null
 # Never copy the app directory: only a freshly published executable and reviewed text.
 Copy-Item -LiteralPath (Join-Path $publishRoot 'PopBat.exe') -Destination (Join-Path $stage 'PopBat.exe')
+Copy-Item -LiteralPath (Join-Path $projectRoot 'tests/Diagnose-Compatibility.ps1') -Destination (Join-Path $stage 'Diagnose-Compatibility.ps1')
+Copy-Item -LiteralPath (Join-Path $projectRoot 'tests/Run-Diagnostics.cmd') -Destination (Join-Path $stage 'Run-Diagnostics.cmd')
 Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination (Join-Path $stage 'LICENSE.txt')
 $utf8 = [Text.UTF8Encoding]::new($true)
 [IO.File]::WriteAllText((Join-Path $stage 'README.txt'), [IO.File]::ReadAllText((Join-Path $projectRoot 'docs/USER_GUIDE.md')), $utf8)
 $notices = [Text.StringBuilder]::new()
 $noticeCount = 0
+$assets = Get-Content -LiteralPath (Join-Path $buildRoot 'share-obj/project.assets.json') -Raw | ConvertFrom-Json
+$windowsSdkVersions = @($assets.project.frameworks.PSObject.Properties | ForEach-Object {
+    $_.Value.downloadDependencies | Where-Object { $_.name -eq 'Microsoft.Windows.SDK.NET.Ref' } | ForEach-Object {
+        if ($_.version -notmatch '^\[([^,\]]+),\s*([^\]]+)\]$' -or $Matches[1] -ne $Matches[2]) { throw 'Expected an exact Windows SDK download version.' }
+        $Matches[1]
+    }
+} | Sort-Object -Unique)
+if ($windowsSdkVersions.Count -eq 0) {
+    $windowsSdkVersions = @($assets.libraries.PSObject.Properties.Name | Where-Object { $_ -like 'Microsoft.Windows.SDK.NET.Ref/*' } | ForEach-Object { ($_ -split '/', 2)[1] } | Sort-Object -Unique)
+}
+if ($windowsSdkVersions.Count -ne 1) { throw 'Could not identify the resolved Windows SDK projection license package.' }
+$windowsSdkVersion = $windowsSdkVersions[0]
 $licenseVersions = @{
     'microsoft.netcore.app.runtime.win-x64' = ($config.runtimeOptions.includedFrameworks | Where-Object name -eq 'Microsoft.NETCore.App').version
     'microsoft.windowsdesktop.app.runtime.win-x64' = ($config.runtimeOptions.includedFrameworks | Where-Object name -eq 'Microsoft.WindowsDesktop.App').version
-    'microsoft.windows.sdk.net.ref' = '10.0.19041.57'
+    'microsoft.windows.sdk.net.ref' = $windowsSdkVersion
 }
 foreach ($package in @('microsoft.netcore.app.runtime.win-x64', 'microsoft.windowsdesktop.app.runtime.win-x64', 'microsoft.windows.sdk.net.ref')) {
     $directory = Get-Item -LiteralPath (Join-Path $buildRoot ('nuget/' + $package + '/' + $licenseVersions[$package]))
@@ -56,7 +70,7 @@ foreach ($license in @('DOTNET-LIBRARY-LICENSE.txt', 'WINDOWS-SDK-LICENSE.txt'))
     $null = $notices.AppendLine([IO.File]::ReadAllText((Join-Path $projectRoot ('docs/licenses/' + $license)))).AppendLine()
 }
 [IO.File]::WriteAllText((Join-Path $stage 'THIRD-PARTY-NOTICES.txt'), $notices.ToString(), $utf8)
-$manifest = @('PopBat.exe', 'README.txt', 'THIRD-PARTY-NOTICES.txt', 'LICENSE.txt' | ForEach-Object {
+$manifest = @('PopBat.exe', 'README.txt', 'THIRD-PARTY-NOTICES.txt', 'LICENSE.txt', 'Diagnose-Compatibility.ps1', 'Run-Diagnostics.cmd' | ForEach-Object {
     (Get-FileHash -LiteralPath (Join-Path $stage $_) -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + $_
 })
 [IO.File]::WriteAllLines((Join-Path $stage 'SHA256SUMS.txt'), $manifest, [Text.UTF8Encoding]::new($false))
@@ -65,8 +79,8 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 $zip = [IO.Compression.ZipFile]::OpenRead($archive)
 try {
     $names = @($zip.Entries | ForEach-Object { $_.FullName } | Sort-Object)
-    $expected = @('LICENSE.txt', 'PopBat.exe', 'README.txt', 'SHA256SUMS.txt', 'THIRD-PARTY-NOTICES.txt')
-    if (@(Compare-Object $names $expected).Count -ne 0 -or $names.Count -ne 5) { throw 'Unexpected share archive contents.' }
+    $expected = @('Diagnose-Compatibility.ps1', 'LICENSE.txt', 'PopBat.exe', 'README.txt', 'Run-Diagnostics.cmd', 'SHA256SUMS.txt', 'THIRD-PARTY-NOTICES.txt')
+    if (@(Compare-Object $names $expected).Count -ne 0 -or $names.Count -ne 7) { throw 'Unexpected share archive contents.' }
 } finally { $zip.Dispose() }
 [IO.Compression.ZipFile]::ExtractToDirectory($archive, $verify)
 foreach ($line in $manifest) {
@@ -103,7 +117,7 @@ $report = [ordered]@{
     ArchiveSha256 = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash
     ExecutableSha256 = (Get-FileHash -LiteralPath (Join-Path $verify 'PopBat.exe') -Algorithm SHA256).Hash
     Bytes = (Get-Item -LiteralPath $archive).Length; Files = $names
-    SelfContained = $true; IncludedFrameworks = $config.runtimeOptions.includedFrameworks
+    SelfContained = $true; IncludedFrameworks = $config.runtimeOptions.includedFrameworks; WindowsSdkProjectionVersion = $windowsSdkVersion
     ChecksumsVerified = $true; SelfTestChecks = $selfTestChecks; UserDataIncluded = $false
 }
 [IO.File]::WriteAllText((Join-Path $buildRoot 'release-report.json'), ($report | ConvertTo-Json -Depth 6), [Text.UTF8Encoding]::new($false))

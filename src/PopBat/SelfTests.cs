@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 
 namespace PopBat;
@@ -63,6 +63,7 @@ internal static class SelfTests
             count += StandardBatteryTests.Run();
             count += FastPairTests.Run();
             count += LegacyKeyboardTests.Run();
+            count += CompatibilityTests.Run();
             Console.WriteLine($"PASS: {count} checks; no hardware was opened and no test history was written.");
             return 0;
         }

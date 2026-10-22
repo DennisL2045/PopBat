@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Threading;
@@ -11,13 +11,16 @@ internal sealed class DeviceMonitor
     private readonly DeltaHidReader _delta = new();
     private readonly LogitechHidReader _logitech = new();
     private readonly BluetoothGattReader _bluetooth = new();
-    private readonly BluetoothClassicReader _classic = new();
+    private readonly BluetoothClassicReader _classic;
     private readonly StandardHidReader _standardHid = new();
     private readonly LegacyKeyboardReader _keyboard = new();
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly IReadOnlyList<BatteryProvider> _providers;
-    internal DeviceMonitor()
+    internal IReadOnlyList<HidDeviceInventory> LastHidInventory { get; private set; } = Array.Empty<HidDeviceInventory>();
+    internal IReadOnlyList<BluetoothClassicReader.InspectionResult> HeadsetQueries => _classic.Inspection.ToArray();
+    internal DeviceMonitor(bool diagnostics = false)
     {
+        _classic = new BluetoothClassicReader(diagnostics);
         _providers = new[] {
             new BatteryProvider("bluetooth-fast-pair", BatteryProviderKind.Standard, 0, async (context, token) => {
                 if (_bluetooth.IsPending) { context.DeferVendorReads = true; return Array.Empty<DeviceBattery>(); }
@@ -29,9 +32,9 @@ internal sealed class DeviceMonitor
             }),
             new BatteryProvider("hid-battery-feature", BatteryProviderKind.Standard, 2, async (context, token) => {
                 var batch = await _standardHid.ReadAsync(context.CoveredPhysicalKeys, token);
-                context.HidInventory = batch.Inventory; context.DeferVendorReads |= _standardHid.IsPending || _keyboard.IsPending; return batch.Devices;
+                context.HidInventory = batch.Inventory; LastHidInventory = batch.Inventory; context.DeferVendorReads |= _standardHid.IsPending || _keyboard.IsPending; return batch.Devices;
             }),
-            new BatteryProvider("rog-delta-ii", BatteryProviderKind.VendorFallback, 0, async (context, token) => {
+            new BatteryProvider("rog-delta-ii", BatteryProviderKind.Targeted, 0, async (context, token) => {
                 var device = context.HidInventory.FirstOrDefault(d => d.Vendor == DeltaProtocol.VendorId && d.Product == DeltaProtocol.ProductId);
                 if (device != null && context.CoveredPhysicalKeys.Contains(device.Group)) return Array.Empty<DeviceBattery>();
                 var reading = await _delta.ReadAsync(token);
@@ -42,17 +45,21 @@ internal sealed class DeviceMonitor
             new BatteryProvider("legacy-keyboard-battery", BatteryProviderKind.VendorFallback, 2, (context, token) =>
                 context.HidInventory.Any(d => d.Usb && d.Vendor == 0x05AC && d.Product == 0x024F && !context.CoveredPhysicalKeys.Contains(d.Group))
                     ? _keyboard.ReadAsync(token, context.CoveredPhysicalKeys) : Task.FromResult<IReadOnlyList<DeviceBattery>>(Array.Empty<DeviceBattery>()))
-        };
+        }.Where(p => DeviceAccessPolicy.AllowsProvider(p.Id)).ToArray();
     }
     internal async Task<IReadOnlyList<DeviceBattery>> ReadAsync(CancellationToken token, bool retry = false,
-        Action<IReadOnlyList<DeviceBattery>>? progress = null)
+        Action<IReadOnlyList<DeviceBattery>>? progress = null, Action<BatteryProviderDiagnostic>? diagnostics = null)
     {
         await _gate.WaitAsync(token);
         try
         {
             return await Task.Run(async () => {
                 if (retry) { _logitech.RetryNow(); _classic.RetryNow(); _bluetooth.RetryNow(); _standardHid.RetryNow(); _keyboard.RetryNow(); }
-                return await BatteryProviderPipeline.ReadAsync(_providers, token, progress);
+                var groups = new IReadOnlyList<BatteryProvider>[] {
+                    _providers.Where(p => !p.Id.StartsWith("bluetooth-", StringComparison.Ordinal)).ToArray(),
+                    _providers.Where(p => p.Id.StartsWith("bluetooth-", StringComparison.Ordinal)).ToArray()
+                };
+                return await BatteryProviderPipeline.ReadGroupsAsync(groups, token, progress, diagnostics);
             }, token);
         }
         finally { _gate.Release(); }

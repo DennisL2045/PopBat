@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,6 +18,9 @@ public static class DeltaProtocol
     public const ushort VendorId = 0x0B05, ProductId = 0x1AFA, UsagePage = 0xFF00;
     public const byte ReportId = 0xCC, GetCommand = 0x12;
     public const byte ConnectionKey = 0, BatteryKey = 7, ChargingKey = 8;
+
+    public static bool AllowsControlCollection(ushort page, ushort usage, ushort input, ushort output, bool hasOutputReport) =>
+        page == UsagePage && usage == 1 && input >= 7 && input <= 256 && output >= 7 && output <= 256 && hasOutputReport;
 
     public static bool IsTargetPath(string path)
     {
