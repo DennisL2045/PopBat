@@ -20,6 +20,7 @@ if (!$SkipBuild) {
 $config = Get-Content -LiteralPath (Join-Path $buildRoot 'share-bin/PopBat.runtimeconfig.json') -Raw | ConvertFrom-Json
 $frameworks = @($config.runtimeOptions.includedFrameworks | ForEach-Object { $_.name })
 if ('Microsoft.NETCore.App' -notin $frameworks -or 'Microsoft.WindowsDesktop.App' -notin $frameworks -or $config.runtimeOptions.frameworks) { throw 'Expected bundled .NET and Windows Desktop runtimes.' }
+if (@($config.runtimeOptions.includedFrameworks | Where-Object { $_.version -ne '8.0.32' }).Count) { throw 'Bundled runtime security patch does not match the reviewed version.' }
 [xml]$project = Get-Content -LiteralPath (Join-Path $projectRoot 'src/PopBat/PopBat.csproj') -Raw
 $version = [string]$project.Project.PropertyGroup.Version
 $stamp = [DateTime]::Now.ToString('yyyyMMdd-HHmmss')
@@ -30,12 +31,18 @@ $archive = Join-Path $artifactRoot ('PopBat-' + $version + '-win-x64-' + $stamp 
 New-Item -ItemType Directory -Force -Path $artifactRoot, $stage | Out-Null
 # Never copy the app directory: only a freshly published executable and reviewed text.
 Copy-Item -LiteralPath (Join-Path $publishRoot 'PopBat.exe') -Destination (Join-Path $stage 'PopBat.exe')
+Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination (Join-Path $stage 'LICENSE.txt')
 $utf8 = [Text.UTF8Encoding]::new($true)
 [IO.File]::WriteAllText((Join-Path $stage 'README.txt'), [IO.File]::ReadAllText((Join-Path $projectRoot 'docs/USER_GUIDE.md')), $utf8)
 $notices = [Text.StringBuilder]::new()
 $noticeCount = 0
+$licenseVersions = @{
+    'microsoft.netcore.app.runtime.win-x64' = ($config.runtimeOptions.includedFrameworks | Where-Object name -eq 'Microsoft.NETCore.App').version
+    'microsoft.windowsdesktop.app.runtime.win-x64' = ($config.runtimeOptions.includedFrameworks | Where-Object name -eq 'Microsoft.WindowsDesktop.App').version
+    'microsoft.windows.sdk.net.ref' = '10.0.19041.57'
+}
 foreach ($package in @('microsoft.netcore.app.runtime.win-x64', 'microsoft.windowsdesktop.app.runtime.win-x64', 'microsoft.windows.sdk.net.ref')) {
-    $directory = Get-ChildItem -LiteralPath (Join-Path $buildRoot ('nuget/' + $package)) -Directory | Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
+    $directory = Get-Item -LiteralPath (Join-Path $buildRoot ('nuget/' + $package + '/' + $licenseVersions[$package]))
     foreach ($notice in @(Get-ChildItem -LiteralPath $directory.FullName -File | Where-Object { $_.Name -match '(?i)^(LICENSE|THIRD-PARTY-NOTICES|ThirdPartyNotices)(\.(txt|md))?$' })) {
         $null = $notices.AppendLine('===== ' + $package + '/' + $directory.Name + '/' + $notice.Name + ' =====')
         $null = $notices.AppendLine([IO.File]::ReadAllText($notice.FullName)).AppendLine()
@@ -49,7 +56,7 @@ foreach ($license in @('DOTNET-LIBRARY-LICENSE.txt', 'WINDOWS-SDK-LICENSE.txt'))
     $null = $notices.AppendLine([IO.File]::ReadAllText((Join-Path $projectRoot ('docs/licenses/' + $license)))).AppendLine()
 }
 [IO.File]::WriteAllText((Join-Path $stage 'THIRD-PARTY-NOTICES.txt'), $notices.ToString(), $utf8)
-$manifest = @('PopBat.exe', 'README.txt', 'THIRD-PARTY-NOTICES.txt' | ForEach-Object {
+$manifest = @('PopBat.exe', 'README.txt', 'THIRD-PARTY-NOTICES.txt', 'LICENSE.txt' | ForEach-Object {
     (Get-FileHash -LiteralPath (Join-Path $stage $_) -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + $_
 })
 [IO.File]::WriteAllLines((Join-Path $stage 'SHA256SUMS.txt'), $manifest, [Text.UTF8Encoding]::new($false))
@@ -58,8 +65,8 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 $zip = [IO.Compression.ZipFile]::OpenRead($archive)
 try {
     $names = @($zip.Entries | ForEach-Object { $_.FullName } | Sort-Object)
-    $expected = @('PopBat.exe', 'README.txt', 'SHA256SUMS.txt', 'THIRD-PARTY-NOTICES.txt')
-    if (@(Compare-Object $names $expected).Count -ne 0 -or $names.Count -ne 4) { throw 'Unexpected share archive contents.' }
+    $expected = @('LICENSE.txt', 'PopBat.exe', 'README.txt', 'SHA256SUMS.txt', 'THIRD-PARTY-NOTICES.txt')
+    if (@(Compare-Object $names $expected).Count -ne 0 -or $names.Count -ne 5) { throw 'Unexpected share archive contents.' }
 } finally { $zip.Dispose() }
 [IO.Compression.ZipFile]::ExtractToDirectory($archive, $verify)
 foreach ($line in $manifest) {

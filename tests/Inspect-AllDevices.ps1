@@ -28,7 +28,7 @@ try {
     $null = $stderr.GetAwaiter().GetResult()
     if ($process.ExitCode -notin @(0,1)) { throw ('PopBat diagnostic failed, exit code ' + $process.ExitCode) }
     $data = $text | ConvertFrom-Json
-    if ($data.Version -ne '0.4.6') { throw 'Unexpected diagnostic format.' }
+    if ($data.Version -ne '0.4.7') { throw 'Unexpected diagnostic format.' }
     $data | Add-Member -NotePropertyName ExecutableSha256 -NotePropertyValue (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash
     # The executable emits only parsed names/status/battery or its own resource counters.
     $data | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $report -Encoding UTF8

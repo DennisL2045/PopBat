@@ -17,7 +17,7 @@ Copyright © 2026 DennisL2045
 
 第一次執行後可能產生 data 資料夾，儲存本機通知偏好及可用的 ROG 電量歷史；一般裝置的歷史只留在記憶體。重新分享時請使用原始 ZIP，避免把自己的 data 資料夾一起傳出去。
 
-內含的第三方授權文件需要一起保留。使用或再散布其中 Microsoft 元件時，須同意並遵守 THIRD-PARTY-NOTICES.txt 內適用的 Microsoft 授權條款；若不同意，請勿使用或散布這些元件。其他開源元件保留其原授權權利。SHA256SUMS.txt 可用來比對檔案是否改變。
+PopBat 原始程式碼採 MIT 授權，條款見 LICENSE.txt。內含的第三方授權文件需要一起保留。使用或再散布其中 Microsoft 元件時，須同意並遵守 THIRD-PARTY-NOTICES.txt 內適用的 Microsoft 授權條款；若不同意，請勿使用或散布這些元件。其他開源元件保留其原授權權利。SHA256SUMS.txt 可用來比對檔案是否改變。
 
 PopBat 本身沒有雲端 API、登入、遙測或回連伺服器功能。Windows／.NET 自身的系統錯誤回報依系統設定運作，不是 PopBat 維運的服務。
 

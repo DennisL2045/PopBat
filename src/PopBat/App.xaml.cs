@@ -41,7 +41,7 @@ public partial class App : Application
                 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(6));
                 var reader = new LegacyKeyboardReader(diagnostics: true);
                 var readings = await reader.ReadAsync(timeout.Token);
-                Console.WriteLine(JsonSerializer.Serialize(new { Version = "0.4.6", Queries = reader.Inspection, Devices = readings.Select(d => new {
+                Console.WriteLine(JsonSerializer.Serialize(new { Version = "0.4.7", Queries = reader.Inspection, Devices = readings.Select(d => new {
                     d.Name, d.Connection, d.Reading.State, d.Reading.Percent, d.Reading.Charging, d.Note }) }, new JsonSerializerOptions { WriteIndented = true,
                         Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() } }));
                 Shutdown(readings.Any(d => d.Reading.State == DeviceState.Connected) ? 0 : 1); return;
@@ -50,14 +50,14 @@ public partial class App : Application
             {
                 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(6));
                 var devices = await StandardHidReader.InspectCollectionsAsync(timeout.Token).WaitAsync(timeout.Token);
-                Console.WriteLine(JsonSerializer.Serialize(new { Version = "0.4.6", Devices = devices }, new JsonSerializerOptions { WriteIndented = true }));
+                Console.WriteLine(JsonSerializer.Serialize(new { Version = "0.4.7", Devices = devices }, new JsonSerializerOptions { WriteIndented = true }));
                 Shutdown(0); return;
             }
             if (Array.IndexOf(e.Args, "--inspect-battery") >= 0)
             {
                 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
                 var devices = await BluetoothBatteryInspection.RunAsync(timeout.Token).WaitAsync(timeout.Token);
-                Console.WriteLine(JsonSerializer.Serialize(new { Version = "0.4.6", Source = "DirectGattUncached", NameSource = "CurrentConnectionName", Devices = devices }, new JsonSerializerOptions { WriteIndented = true }));
+                Console.WriteLine(JsonSerializer.Serialize(new { Version = "0.4.7", Source = "DirectGattUncached", NameSource = "CurrentConnectionName", Devices = devices }, new JsonSerializerOptions { WriteIndented = true }));
                 Shutdown(0); return;
             }
             if (Array.IndexOf(e.Args, "--inspect-headset") >= 0)
@@ -65,7 +65,7 @@ public partial class App : Application
                 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(8));
                 var reader = new BluetoothClassicReader(diagnostics: true);
                 var readings = await reader.ReadAsync(timeout.Token);
-                Console.WriteLine(JsonSerializer.Serialize(new { Version = "0.4.6", Source = "DirectFastPairMessageStream",
+                Console.WriteLine(JsonSerializer.Serialize(new { Version = "0.4.7", Source = "DirectFastPairMessageStream",
                     Queries = reader.Inspection.ToArray(), Devices = readings.Select(d => new {
                         d.Name, d.Reading.State, d.Reading.Percent, d.Reading.Charging, d.Note }) }, new JsonSerializerOptions { WriteIndented = true }));
                 Shutdown(0); return;
@@ -75,7 +75,7 @@ public partial class App : Application
                 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(6));
                 var inventory = await StandardHidReader.InspectAsync(timeout.Token).WaitAsync(timeout.Token);
                 // Descriptor metadata only; never expose identity grouping keys, addresses or paths.
-                Console.WriteLine(JsonSerializer.Serialize(new { Version = "0.4.6", Devices = inventory.Select(d => new {
+                Console.WriteLine(JsonSerializer.Serialize(new { Version = "0.4.7", Devices = inventory.Select(d => new {
                     d.Name, d.Manufacturer, VendorId = d.Vendor.ToString("X4"), ProductId = d.Product.ToString("X4"),
                     d.Usb, d.Peripheral, d.InputBattery, d.SafeFeatureBattery }) }, new JsonSerializerOptions { WriteIndented = true }));
                 Shutdown(0); return;
@@ -88,7 +88,7 @@ public partial class App : Application
                     : await new DeviceMonitor().ReadAsync(timeout.Token);
                 var reading = readings.Count > 0 ? readings[0].Reading : BatteryReading.Empty(DeviceState.NoReply);
                 object result = legacy ? new { Device = "ROG Delta II", VendorId = "0B05", ProductId = "1AFA", reading.State, reading.Percent, reading.Charging, reading.CheckedAt, reading.TargetInterfaces, reading.VendorInterfaces }
-                    : new { Version = "0.4.6", Devices = readings.Select(d => new { d.Name, d.Connection, d.Reading.State, d.Reading.Percent, d.Reading.Charging, d.Level, d.Note, d.Reading.CheckedAt }).ToArray() };
+                    : new { Version = "0.4.7", Devices = readings.Select(d => new { d.Name, d.Connection, d.Reading.State, d.Reading.Percent, d.Reading.Charging, d.Level, d.Note, d.Reading.CheckedAt }).ToArray() };
                 string json = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true, Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() } });
                 string? output = Option(e.Args, "--output");
                 if (Array.IndexOf(e.Args, "--preview") >= 0)

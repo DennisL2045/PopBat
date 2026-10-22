@@ -1,3 +1,9 @@
+PopBat original code
+Copyright (c) 2026 DennisL2045. Licensed under MIT; see LICENSE / LICENSE.txt.
+The MIT grant covers original PopBat code, including earlier revisions in this
+repository. It does not relicense Microsoft's binaries, third-party components,
+or referenced documentation. Their own license terms below remain applicable.
+
 Protocol documentation attribution (no additional runtime dependency)
 PopBat's original Fast Pair status implementation follows Google's published
 Message Stream, Device information and Battery Notification specifications:
