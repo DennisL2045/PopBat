@@ -6,7 +6,11 @@ Windows 無線裝置電量工具。優先透過標準 Bluetooth GATT／安全的
 
 ## 分享給使用者
 
-執行 `./Export-Release.ps1`，取得 `artifacts/PopBat-0.4.4-win-x64-*.zip`。這是包含 .NET 執行環境的單一執行檔版本，適用 Windows 10 2004 以上／Windows 11 x64。解壓縮到可寫入的資料夾後執行 `PopBat.exe`，不需另外安裝 .NET、Python 或廠商軟體。
+請到 [Releases 下載頁](https://github.com/DennisL2045/PopBat/releases/tag/v0.4.4)，在 **Assets** 選擇 [PopBat-0.4.4-win-x64-20261022-135107.zip](https://github.com/DennisL2045/PopBat/releases/download/v0.4.4/PopBat-0.4.4-win-x64-20261022-135107.zip)。目前儲存庫為私人，下載時需要登入有權限的 GitHub 帳號。
+
+這份約 71 MB 的分享包已包含 .NET 執行環境，適用 Windows 10 2004 以上／Windows 11 x64。解壓縮後執行 `PopBat.exe` 即可，不需執行任何 `.ps1` 腳本或另外安裝 .NET、Python、廠商軟體。
+
+GitHub 首頁 **Code → Download ZIP**，以及 Releases 的 **Source code (zip)**，下載的都是原始碼。解壓縮後通常名為 `PopBat-main`，其中沒有可直接使用的執行檔或分享 ZIP。`Export-Release.ps1` 是供開發者建立分享包的 PowerShell 腳本；Windows 可能預設用記事本開啟它。
 
 分享包使用固定檔案清單：執行檔、使用說明、第三方授權及 SHA256 校驗碼。沒有原始碼、研究材料、個人設定、歷史紀錄、實機診斷、截圖或 Git 資料。
 
@@ -15,6 +19,8 @@ Windows 無線裝置電量工具。優先透過標準 Bluetooth GATT／安全的
 ## 開發與驗證
 
 需要 .NET 8 SDK 以上與 PowerShell。
+
+若要自行建立分享包，請在專案資料夾開啟 PowerShell，再輸入下面的命令；不是雙擊腳本。`./Export-Release.ps1` 完成後會產生 `artifacts/PopBat-0.4.4-win-x64-*.zip`。
 
 ```powershell
 ./build.ps1
