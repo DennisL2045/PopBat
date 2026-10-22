@@ -1,9 +1,20 @@
-Windows SDK for .NET targeting pack and projections
+.NET 8 Windows runtime and Windows Desktop runtime
+The Windows distribution contains components with different licenses.
+Applicable Microsoft .NET Library License terms are reproduced in this bundle.
+The original runtime package LICENSE and THIRD-PARTY-NOTICES are also retained.
+Authoritative licensing map:
+https://github.com/dotnet/core/blob/main/license-information-windows.md
+
+Windows SDK for .NET targeting pack and projections (10.0.19041.57)
 Copyright (c) Microsoft Corporation. All rights reserved.
 Package license: https://aka.ms/WinSDKLicenseURL
 Package: Microsoft.Windows.SDK.NET.Ref
+The applicable Windows SDK license text is reproduced in this bundle.
+Microsoft.Windows.SDK.NET.dll and WinRT.Runtime.dll are on Microsoft's redistribution list:
+https://learn.microsoft.com/en-us/legal/windows-sdk/redist#microsoftwindowssdknetref
 
-C#/WinRT
+C#/WinRT source license and attribution
+The SDK projection binaries above remain subject to the SDK package's terms.
 Source and license: https://github.com/microsoft/CsWinRT/blob/master/LICENSE
 
 MIT License

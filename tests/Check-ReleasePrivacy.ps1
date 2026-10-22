@@ -3,7 +3,7 @@ param([string[]]$Files, [string]$AssemblyPath)
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if (!$Files) {
-    $Files = @('.gitignore', 'README.md', 'build.ps1', 'Export-Release.ps1', 'NuGet.Config', 'docs/USER_GUIDE.md', 'docs/PRIVACY_REVIEW.md', 'docs/GAME_COMPATIBILITY.md', 'docs/THIRD_PARTY_LICENSES.txt', 'tests/TEST_PLAN.md')
+    $Files = @('.gitignore', 'README.md', 'build.ps1', 'Export-Release.ps1', 'NuGet.Config', 'docs/USER_GUIDE.md', 'docs/PRIVACY_REVIEW.md', 'docs/GAME_COMPATIBILITY.md', 'docs/THIRD_PARTY_LICENSES.txt', 'docs/licenses/DOTNET-LIBRARY-LICENSE.txt', 'docs/licenses/WINDOWS-SDK-LICENSE.txt', 'tests/TEST_PLAN.md')
     $Files += @(Get-ChildItem -LiteralPath (Join-Path $projectRoot 'src/PopBat') -File | ForEach-Object { 'src/PopBat/' + $_.Name })
     $Files += @(Get-ChildItem -LiteralPath $PSScriptRoot -Filter '*.ps1' -File | ForEach-Object { 'tests/' + $_.Name })
 }

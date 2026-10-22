@@ -1,4 +1,4 @@
-# PopBat 0.4.4
+# PopBat 0.4.5
 
 Windows 無線裝置電量工具。優先透過標準 Bluetooth GATT／安全的 HID Battery Feature 直接讀取裝置名稱與電量，另提供已確認的 ROG Delta II、Logitech HID++ 與部分鍵盤接收器電量協定。
 
@@ -6,7 +6,7 @@ Windows 無線裝置電量工具。優先透過標準 Bluetooth GATT／安全的
 
 ## 分享給使用者
 
-請到 [Releases 下載頁](https://github.com/DennisL2045/PopBat/releases/tag/v0.4.4)，在 **Assets** 選擇 [PopBat-0.4.4-win-x64-20261022-135107.zip](https://github.com/DennisL2045/PopBat/releases/download/v0.4.4/PopBat-0.4.4-win-x64-20261022-135107.zip)。目前儲存庫為私人，下載時需要登入有權限的 GitHub 帳號。
+請到 [Releases 下載頁](https://github.com/DennisL2045/PopBat/releases/latest)，在 **Assets** 下載 **PopBat 開頭的 ZIP**。
 
 這份約 71 MB 的分享包已包含 .NET 執行環境，適用 Windows 10 2004 以上／Windows 11 x64。解壓縮後執行 `PopBat.exe` 即可，不需執行任何 `.ps1` 腳本或另外安裝 .NET、Python、廠商軟體。
 
@@ -14,13 +14,13 @@ GitHub 首頁 **Code → Download ZIP**，以及 Releases 的 **Source code (zip
 
 分享包使用固定檔案清單：執行檔、使用說明、第三方授權及 SHA256 校驗碼。沒有原始碼、研究材料、個人設定、歷史紀錄、實機診斷、截圖或 Git 資料。
 
-只分享這份 ZIP 即可。私人 GitHub 儲存庫供開發備份；收件人不需要儲存庫存取權。編譯過的 .NET 執行檔仍可能被反編譯，打包不提供防逆向保證。
+把這份 ZIP 傳給對方即可。編譯過的 .NET 執行檔仍可能被反編譯，打包不提供防逆向保證。
 
 ## 開發與驗證
 
 需要 .NET 8 SDK 以上與 PowerShell。
 
-若要自行建立分享包，請在專案資料夾開啟 PowerShell，再輸入下面的命令；不是雙擊腳本。`./Export-Release.ps1` 完成後會產生 `artifacts/PopBat-0.4.4-win-x64-*.zip`。
+若要自行建立分享包，請在專案資料夾開啟 PowerShell，再輸入下面的命令；不是雙擊腳本。`./Export-Release.ps1` 完成後會產生 `artifacts/PopBat-0.4.5-win-x64-*.zip`。
 
 ```powershell
 ./build.ps1
@@ -40,3 +40,5 @@ GitHub 首頁 **Code → Download ZIP**，以及 Releases 的 **Source code (zip
 - 充電狀態未知時不估算續航、不發低電量通知。遊戲與防外掛共存尚未取得認證。
 
 使用方式見 [使用說明](docs/USER_GUIDE.md)，安全範圍見 [隱私檢查](docs/PRIVACY_REVIEW.md) 與 [遊戲相容性](docs/GAME_COMPATIBILITY.md)。
+
+0.4.5 補齊 Microsoft Windows 元件的散布條款與著作權資訊。各元件依其適用授權散布，並保留原始聲明；詳見 [第三方授權](docs/THIRD_PARTY_LICENSES.txt)。

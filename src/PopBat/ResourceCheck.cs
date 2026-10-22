@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
@@ -62,7 +62,7 @@ internal static class ResourceCheck
         if (!reused) throw new InvalidOperationException("Device cards were recreated during refresh.");
         return JsonSerializer.Serialize(new
         {
-            Version = "0.4.4", Mode = "StartupAndManualOnly", WarmupSeconds = 10,
+            Version = "0.4.5", Mode = "StartupAndManualOnly", WarmupSeconds = 10,
             DurationSeconds = Math.Round(idleDuration, 2), window.RefreshCount,
             StartupRequests = initialRequests, RequestsAfterIdle = idleRequests, RequestsAfterManual = window.RefreshRequests,
             NoAutomaticRefresh = idleRequests == initialRequests, CardInstancesReused = reused, RecreatedCards = recreated,

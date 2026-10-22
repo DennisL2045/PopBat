@@ -44,6 +44,10 @@ foreach ($package in @('microsoft.netcore.app.runtime.win-x64', 'microsoft.windo
 }
 if ($noticeCount -lt 3) { throw 'Missing runtime license or third-party notices.' }
 $null = $notices.AppendLine([IO.File]::ReadAllText((Join-Path $projectRoot 'docs/THIRD_PARTY_LICENSES.txt')))
+foreach ($license in @('DOTNET-LIBRARY-LICENSE.txt', 'WINDOWS-SDK-LICENSE.txt')) {
+    $null = $notices.AppendLine('===== ' + $license + ' =====')
+    $null = $notices.AppendLine([IO.File]::ReadAllText((Join-Path $projectRoot ('docs/licenses/' + $license)))).AppendLine()
+}
 [IO.File]::WriteAllText((Join-Path $stage 'THIRD-PARTY-NOTICES.txt'), $notices.ToString(), $utf8)
 $manifest = @('PopBat.exe', 'README.txt', 'THIRD-PARTY-NOTICES.txt' | ForEach-Object {
     (Get-FileHash -LiteralPath (Join-Path $stage $_) -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + $_
